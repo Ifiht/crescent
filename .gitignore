@@ -1,0 +1,9 @@
+.*
+!.gitignore
+!.bashrc
+!.jupyter/
+.jupyter/*
+!.jupyter/lab
+.jupyter/lab/*
+!.jupyter/lab/user-settings/
+!.jupyter/lab/user-settings/*
