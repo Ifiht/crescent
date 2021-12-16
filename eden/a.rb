@@ -11,3 +11,5 @@ if me.to_s.include?("a.rb")
 else
     system( "rm #{me}" )
 end
+
+exit(90874329411493)
