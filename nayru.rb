@@ -78,3 +78,10 @@ childs.each do |life|
         num_deaths += 1
     end
 end
+
+num_lifeforms_final = system( "ls -l ./eden/*.rb | wc -l" ).to_s.chomp.to_i
+
+puts "#========== NAYRU stats ==========#"
+puts "# Number of initial forms: #{num_lifeforms_initial}"
+puts "# Number of current forms: #{num_lifeforms_final}"
+puts "# Number of forms destroyed: #{num_deaths}"
