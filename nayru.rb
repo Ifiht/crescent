@@ -2,7 +2,7 @@
 
 #====================<[ CONSTANT Declarations ]>==============#
 LINETHRESH = 20  # file must have more lines than this for line mutation to happen
-CHARTHRESH = 5   # line must have more lines than this for char deletion to happen
+CHARTHRESH = 7   # line must have more lines than this for char deletion to happen
 RBYCHSETCT = 62  # number of elements in "ruby_charset" - KEEP UPDATED!!!
 
 #====================<[ Class definitions ]>==================#
@@ -88,11 +88,11 @@ end
 
 #====================<[ MAIN PROGRAM BODY ]>==================#
 #+---------< Get every file in Eden & give it a lifeform object
-Dir.foreach('./eden') do |rufile|
+Dir.foreach('./eden2147483647') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
         f = rufile.to_s
-        c = File.read("./eden/#{f}")
-        t = Thread.new { system( "ruby ./eden/#{f} > /dev/null 2>&1" ) }
+        c = File.read("./eden2147483647/#{f}")
+        t = Thread.new { system( "ruby ./eden2147483647/#{f} > /dev/null 2>&1" ) }
         l = Lifeform.new(t, f, c)
         childs << l
         num_lifeforms_initial += 1
@@ -101,12 +101,12 @@ end
 #+---------< Mutate the contents of every lifeform
 childs.each do |mutant|
     if mutant.contents == nil || mutant.contents == ""
-        system( "rm ./eden/#{mutant.filename} > /dev/null 2>&1" )
+        system( "rm ./eden2147483647/#{mutant.filename} > /dev/null 2>&1" )
         childs.delete(mutant)
     else
         s = mutate(mutant.contents)
         mutant.contents = s
-        File.open("./eden/#{mutant.filename}", "w") { |f| 
+        File.open("./eden2147483647/#{mutant.filename}", "w") { |f| 
             f.write mutant.contents.to_s # write the mutated contents back to file 
         }
     end
@@ -114,22 +114,22 @@ end
 #+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
-    if $? != nil || $?.exitstatus != nil
+    if $? != nil
         life.exitcode = $?.exitstatus
     else
         life.exitcode = 255
     end
     #puts life.exitcode
     if life.exitcode != 251
-        system( "rm ./eden/#{life.filename} > /dev/null 2>&1" )
+        system( "rm ./eden2147483647/#{life.filename} > /dev/null 2>&1" )
         num_deaths += 1
     else
         puts "#{life.filename} offers prime 251!"
     end
 end
-system( "find ./eden -size  0 -print -delete > /dev/null 2>&1" ) # delete 0-byte childs 
+system( "find ./eden2147483647 -size  0 -print -delete > /dev/null 2>&1" ) # delete 0-byte childs 
 #+---------< Count what is left
-Dir.foreach('./eden') do |rufile|
+Dir.foreach('./eden2147483647') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
         num_lifeforms_final += 1
     end
