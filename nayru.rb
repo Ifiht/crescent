@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 #====================<[ CONSTANT Declarations ]>==============#
-LINETHRESH = 25  # file must have more lines than this for line mutation to happen
-CHARTHRESH = 5   # line must have more chars than this for char deletion to happen
+LINETHRESH = 20  # file must have more lines than this for line mutation to happen
+CHARTHRESH = 5   # line must have more lines than this for char deletion to happen
 RBYCHSETCT = 62  # number of elements in "ruby_charset" - KEEP UPDATED!!!
 
 #====================<[ Class definitions ]>==================#
@@ -20,7 +20,7 @@ end
 
 #====================<[ Variable Initionalization ]>==========#
 childs = []
-ruby_charset = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', # numbers
+$ruby_charset = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', # numbers
 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', # letters
 '(', ')', '{', '}', '[', ']', '.', ',', '?', '/', '\\', '!', '#', '$', '@', '*', '&', '%', ' ', '|', '`', "\n", # special characters
 '-', '+', '=', '*', '^'] # math operators
@@ -46,7 +46,7 @@ def insert_char(str, i)
     s1 = str_arr.count
     s2 = s1 - 1
     line_cha_sel = rand(0..s2)
-    str_arr[line_cha_sel] = ruby_charset[i]
+    str_arr[line_cha_sel] = $ruby_charset[i]
     str = str_arr.join
     return str
 end
@@ -70,14 +70,14 @@ def mutate(slurp)
     snf = sn - 1
     arr_rand_sel = rand(0..snf)
     rby_char_sel = rand(1..RBYCHSETCT)
-    if m > 1
+    if arr_rand_sel > 1
         s[arr_rand_sel] = insert_char(s[arr_rand_sel].to_s, rby_char_sel)
     end
-    if m > CHARTHRESH
+    if arr_rand_sel > CHARTHRESH
         s[arr_rand_sel] = delete_char(s[arr_rand_sel].to_s, rby_char_sel)
     end
-    if m > LINETHRESH
-        if m.even?
+    if arr_rand_sel > LINETHRESH
+        if arr_rand_sel.even?
             s = delete_line(s, arr_rand_sel)
         else
             s = duplicate_line(s, arr_rand_sel)
@@ -92,7 +92,14 @@ Dir.foreach('./eden') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
         f = rufile.to_s
         c = File.read("./eden/#{f}")
-        t = Thread.new { Thread.current[:exitcode] = system( "ruby ./eden/#{f}" ) }
+        t = Thread.new { 
+            Thread.current[:exitcode] = 
+            if system( "ruby ./eden/#{f} > /dev/null 2>&1" ) != nil
+                Thread.current[:exitcode] = $?.exitstatus
+            else
+                Thread.current[:exitcode] = 255
+            end
+        }
         l = Lifeform.new(t, f, c)
         childs << l
         num_lifeforms_initial += 1
@@ -100,17 +107,27 @@ Dir.foreach('./eden') do |rufile|
 end
 #+---------< Mutate the contents of every lifeform
 childs.each do |mutant|
-    s = mutate(mutant.contents)
-    mutant.contents = s
+    if mutant.contents == nil || mutant.contents == ""
+        system( "rm ./eden/#{mutant.filename}" )
+        childs.delete(mutant)
+    else
+        s = mutate(mutant.contents)
+        mutant.contents = s
+        File.open("./eden/#{mutant.filename}", "w") { |f| 
+            f.write mutant.contents.to_s # write the mutated contents back to file 
+        }
+    end
 end
-#+---------< Join the threads, delete all parents
+#+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
-    if life.exitcode != 0
+    #puts life.exitcode
+    if life.exitcode != 251
         system( "rm ./eden/#{life.filename}" )
         num_deaths += 1
     end
 end
+system( "find ./eden -size  0 -print -delete" ) # delete 0-byte childs 
 #+---------< Count what is left
 Dir.foreach('./eden') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)

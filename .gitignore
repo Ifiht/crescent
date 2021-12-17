@@ -1,6 +1,7 @@
 .*
 !.gitignore
 !.bashrc
+!.zshrc
 !.jupyter/
 .jupyter/*
 !.jupyter/lab
