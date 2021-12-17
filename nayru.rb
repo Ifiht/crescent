@@ -2,7 +2,7 @@
 
 #====================<[ CONSTANT Declarations ]>==============#
 LINETHRESH = 20  # file must have more lines than this for line mutation to happen
-CHARTHRESH = 9   # line must have more lines than this for char deletion to happen
+CHARTHRESH = 8   # line must have more lines than this for char deletion to happen
 RBYCHSETCT = 62  # number of elements in "ruby_charset" - KEEP UPDATED!!!
 
 #====================<[ Class definitions ]>==================#
@@ -88,36 +88,28 @@ end
 
 #====================<[ MAIN PROGRAM BODY ]>==================#
 #+---------< Get every file in Eden & give it a lifeform object
-dirArr01 = []
 Dir.foreach('./eden2147483647') do |rufile|
-    thr01 = Thread.new {
-        if rufile.to_s.match?(/.*\.rb/)
-            f = rufile.to_s
-            c = File.read("./eden2147483647/#{f}")
-            t = Thread.new { system( "ruby ./eden2147483647/#{f} > /dev/null 2>&1" ) }
-            l = Lifeform.new(t, f, c)
-            childs << l
-            num_lifeforms_initial += 1
-        end
-    }
-    dirArr01 << thr01
+    if rufile.to_s.match?(/.*\.rb/)
+        f = rufile.to_s
+        c = File.read("./eden2147483647/#{f}")
+        t = Thread.new { system( "ruby ./eden2147483647/#{f} > /dev/null 2>&1" ) }
+        l = Lifeform.new(t, f, c)
+        childs << l
+        num_lifeforms_initial += 1
+    end
 end
-dirArr01.each(&:join)
 #+---------< Mutate the contents of every lifeform
-dirArr02 = []
 childs.each do |mutant|
-    thr02 = Thread.new {
-        if mutant.contents == nil || mutant.contents == ""
-            system( "rm ./eden2147483647/#{mutant.filename} > /dev/null 2>&1" )
-            childs.delete(mutant)
-        else
-            s = mutate(mutant.contents)
-            mutant.contents = s
-        end
-    }
-    dirArr02 << thr02
+    if mutant.contents == nil || mutant.contents == ""
+        system( "rm ./eden2147483647/#{mutant.filename} > /dev/null 2>&1" )
+        childs.delete(mutant)
+    else
+        s = mutate(mutant.contents)
+        mutant.contents = s
+        #+-----< write the mutated contents back to file:
+        File.open("./eden2147483647/#{mutant.filename}", "w") { |f| f.write mutant.contents.to_s }
+    end
 end
-dirArr02.each(&:join)
 #+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
@@ -126,8 +118,6 @@ childs.each do |life|
     else
         life.exitcode = 255
     end
-    #+-----< write the mutated contents back to file:
-    File.open("./eden2147483647/#{life.filename}", "w") { |f| f.write life.contents.to_s }
     #puts life.exitcode
     if life.exitcode != 251
         system( "rm ./eden2147483647/#{life.filename} > /dev/null 2>&1" )
