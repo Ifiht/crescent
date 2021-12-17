@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
 #====================<[ CONSTANT Declarations ]>==============#
-LINETHRESH = 25
-CHARTHRESH = 5
-RBYCHSETCT = 61
+LINETHRESH = 25  # file must have more lines than this for line mutation to happen
+CHARTHRESH = 5   # line must have more chars than this for char deletion to happen
+RBYCHSETCT = 62  # number of elements in "ruby_charset" - KEEP UPDATED!!!
 
 #====================<[ Class definitions ]>==================#
 class Lifeform
@@ -20,10 +20,10 @@ end
 
 #====================<[ Variable Initionalization ]>==========#
 childs = []
-ruby_charset = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 
-'(', ')', '{', '}', '[', ']', '.', ',', '?', '/', '\\', '!', '#', '$', '@', '*', '&', '%', ' ', '|', '`', "\n",
-'-', '+', '=', '*']
+ruby_charset = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', # numbers
+'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', # letters
+'(', ')', '{', '}', '[', ']', '.', ',', '?', '/', '\\', '!', '#', '$', '@', '*', '&', '%', ' ', '|', '`', "\n", # special characters
+'-', '+', '=', '*', '^'] # math operators
 num_lifeforms_initial = 0
 num_lifeforms_final = 0
 num_mutations = 0
@@ -71,19 +71,19 @@ def mutate(slurp)
     arr_rand_sel = rand(0..snf)
     rby_char_sel = rand(1..RBYCHSETCT)
     if m > 1
-        insert_char(s[arr_rand_sel].to_s, rby_char_sel)
+        s[arr_rand_sel] = insert_char(s[arr_rand_sel].to_s, rby_char_sel)
     end
     if m > CHARTHRESH
-        delete_char(s[arr_rand_sel].to_s, rby_char_sel)
+        s[arr_rand_sel] = delete_char(s[arr_rand_sel].to_s, rby_char_sel)
     end
     if m > LINETHRESH
         if m.even?
-            delete_line(s, arr_rand_sel)
+            s = delete_line(s, arr_rand_sel)
         else
-            duplicate_line(s, arr_rand_sel)
+            s = duplicate_line(s, arr_rand_sel)
         end
     end
-    return s
+    return s.join
 end
 
 #====================<[ MAIN PROGRAM BODY ]>==================#
