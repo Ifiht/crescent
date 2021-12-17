@@ -92,14 +92,7 @@ Dir.foreach('./eden') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
         f = rufile.to_s
         c = File.read("./eden/#{f}")
-        t = Thread.new { 
-            Thread.current[:exitcode] = 
-            if system( "ruby ./eden/#{f} > /dev/null 2>&1" ) != nil
-                Thread.current[:exitcode] = $?.exitstatus
-            else
-                Thread.current[:exitcode] = 255
-            end
-        }
+        t = Thread.new { system( "ruby ./eden/#{f} > /dev/null 2>&1" ) }
         l = Lifeform.new(t, f, c)
         childs << l
         num_lifeforms_initial += 1
@@ -108,7 +101,7 @@ end
 #+---------< Mutate the contents of every lifeform
 childs.each do |mutant|
     if mutant.contents == nil || mutant.contents == ""
-        system( "rm ./eden/#{mutant.filename}" )
+        system( "rm ./eden/#{mutant.filename} > /dev/null 2>&1" )
         childs.delete(mutant)
     else
         s = mutate(mutant.contents)
@@ -121,13 +114,20 @@ end
 #+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
+    if $? != nil || $?.exitstatus != nil
+        life.exitcode = $?.exitstatus
+    else
+        life.exitcode = 255
+    end
     #puts life.exitcode
     if life.exitcode != 251
-        system( "rm ./eden/#{life.filename}" )
+        system( "rm ./eden/#{life.filename} > /dev/null 2>&1" )
         num_deaths += 1
+    else
+        puts "#{life.filename} offers prime 251!"
     end
 end
-system( "find ./eden -size  0 -print -delete" ) # delete 0-byte childs 
+system( "find ./eden -size  0 -print -delete > /dev/null 2>&1" ) # delete 0-byte childs 
 #+---------< Count what is left
 Dir.foreach('./eden') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
@@ -135,7 +135,7 @@ Dir.foreach('./eden') do |rufile|
     end
 end
 #+---------< Output epoch statistics
-puts "#========== NAYRU stats ==========#"
+puts "#========== epoch stats ==========#"
 puts "#  Number of initial forms: #{num_lifeforms_initial}"
 puts "#  Number of current forms: #{num_lifeforms_final}"
 puts "#          Forms destroyed: #{num_deaths}"
