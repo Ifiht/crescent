@@ -19,5 +19,5 @@ if true
 elsif false
     exit(13)
 else
-    exit(1)
+    exit(2)
 end
