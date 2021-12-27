@@ -117,8 +117,8 @@ end
 #+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
-    if ENV['$?'] != nil
-        life.exitcode = ENV['$?'].to_i
+    if $? != nil
+        life.exitcode = $?.exitstatus.to_i
     else
         life.exitcode = 255
     end
