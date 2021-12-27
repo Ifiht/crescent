@@ -92,29 +92,33 @@ Dir.foreach('./eden2147483647') do |rufile|
     if rufile.to_s.match?(/.*\.rb/)
         f = rufile.to_s
         c = File.read("./eden2147483647/#{f}")
-        t = Thread.new { system( "ruby ./eden2147483647/#{f} > /dev/null 2>&1" ) }
-        l = Lifeform.new(t, f, c)
-        childs << l
-        num_lifeforms_initial += 1
-    end
-end
-#+---------< Mutate the contents of every lifeform
-childs.each do |mutant|
-    if mutant.contents == nil || mutant.contents == ""
-        system( "rm ./eden2147483647/#{mutant.filename} > /dev/null 2>&1" )
-        childs.delete(mutant)
+        #+---------< Mutate the contents of every lifeform
+        if c == nil || c == ""
+            system( "rm ./eden2147483647/#{f} > /dev/null 2>&1" )
+            puts "file #{f} removed for nil"
+        else
+            s = mutate(c)
+            c = s
+            #+-----< write the mutated contents back to file:
+            File.open("./eden2147483647/#{f}", "w") { |f| f.write c.to_s }
+            #+-----< create threads from newly mutated life:
+            t = Thread.new { system( "ruby ./eden2147483647/#{f} > /dev/null 2>&1" ) }
+            l = Lifeform.new(t, f, c)
+            childs << l
+            num_lifeforms_initial += 1
+        end
     else
-        s = mutate(mutant.contents)
-        mutant.contents = s
-        #+-----< write the mutated contents back to file:
-        File.open("./eden2147483647/#{mutant.filename}", "w") { |f| f.write mutant.contents.to_s }
+        if rufile.to_s.match?(/^[^.]+.*/)
+            system( "rm ./eden2147483647/#{f}" )
+            puts "file #{f} removed for .rb match"
+        end
     end
 end
 #+---------< Join the threads, delete all parents that didn't remove themselves
 childs.each do |life|
     life.threadid.join
-    if $? != nil
-        life.exitcode = $?.exitstatus
+    if ENV['$?'] != nil
+        life.exitcode = ENV['$?'].to_i
     else
         life.exitcode = 255
     end
@@ -125,6 +129,7 @@ childs.each do |life|
     else
         puts "#{life.filename} offers prime 251!"
     end
+    puts life.exitcode.to_s
 end
 system( "find ./eden2147483647 -size  0 -print -delete > /dev/null 2>&1" ) # delete 0-byte childs 
 #+---------< Count what is left
